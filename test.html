@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Startup Sector Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        .chart-container {
+            width: 80%;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Startup Sector Analysis</h1>
+
+    <div class="chart-container">
+        <canvas id="startupCountsChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="fundingAmountsChart"></canvas>
+    </div>
+
+    <script>
+        // Company object with type annotations
+        // Type definition for reference
+        /*
+        type Company = {
+          code: string;              // char (unique)
+          title: string;             // char (unique)
+          industry: string;          // char (classification)
+          vertical: string;          // char (classification)
+          canton: string;            // char (classification)
+          spinOffs: string[];        // list
+          city: string;              // char
+          year: number;              // int
+          highlights: string[];      // list
+          genderCEO: string;         // char (classification)
+          oob: boolean;              // bool
+          funded: boolean;           // bool
+          comment: string;           // char
+        };
+        */
+
+        // Deal object with type annotations
+        /*
+        type Deal = {
+          id: string;                // char (unique generated)
+          investors: string;         // char
+          amount: number | null;     // numeric
+          valuation: number | null;  // numeric
+          comment: string;           // char
+          url: string;               // char
+          confidential: boolean;     // bool
+          amountConfidential: boolean; // bool
+          dateOfFundingRound: Date;  // date
+          type: string;              // char (classification)
+          phase: string;             // char (classification)
+          canton: string;            // char (classification)
+          company: string;           // char (reference to Company.code)
+          genderCEO: string;         // char (classification)
+        };
+        */
+
+        // *** IMPORTANT:  Replace these empty arrays with your actual data! ***
+        const companies = [ {
+    code: "Noury AG",               // Using company name as code since no explicit code is provided
+    title: "Noury AG",
+    industry: "",                   // Empty as not provided in data
+    vertical: "",                   // Empty as not provided in data
+    canton: "Bern",
+    spinOffs: [],                   // Empty array as no spin-offs are listed
+    city: "",                       // Empty as not provided in data
+    year: 2021,
+    highlights: [],                 // Empty array as no highlights are listed
+    genderCEO: "",                  // Empty as not provided in data
+    oob: false,
+    funded: false,
+    comment: ""                     // Empty as not provided in data
+  },
+  {
+    code: "Encelta AG",
+    title: "Encelta AG",
+    industry: "biotech",
+    vertical: "",
+    canton: "Basel-Stadt",
+    spinOffs: ["ETH"],              // ETH appears to be a spin-off
+    city: "Basel",
+    year: 2023,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "PowerMeals SA",
+    title: "PowerMeals SA",
+    industry: "",
+    vertical: "",
+    canton: "Genève",
+    spinOffs: [],
+    city: "Geneva",
+    year: 2020,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Scrimber CSC AG",
+    title: "Scrimber CSC AG",
+    industry: "cleantech",
+    vertical: "",
+    canton: "Bern",
+    spinOffs: [],
+    city: "Thun",
+    year: 2022,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Soobr AG",
+    title: "Soobr AG",
+    industry: "ICT",
+    vertical: "",
+    canton: "Bern",
+    spinOffs: [],
+    city: "",
+    year: 2020,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "Besso AG",
+    title: "Besso AG",
+    industry: "",
+    vertical: "",
+    canton: "Bern",
+    spinOffs: [],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Eatomics, Luca Hagenmayer",
+    title: "Eatomics, Luca Hagenmayer",
+    industry: "",
+    vertical: "",
+    canton: "St. Gallen",
+    spinOffs: [],
+    city: "",
+    year: 2025,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "NanThermix SA",
+    title: "NanThermix SA",
+    industry: "",
+    vertical: "",
+    canton: "Vaud",
+    spinOffs: [],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "SurroundPower GmbH",
+    title: "SurroundPower GmbH",
+    industry: "",
+    vertical: "",
+    canton: "St. Gallen",
+    spinOffs: [],
+    city: "",
+    year: 2024,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Screver AG",
+    title: "Screver AG",
+    industry: "",
+    vertical: "",
+    canton: "Schwyz",
+    spinOffs: [],
+    city: "",
+    year: 2022,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Yainvest AG",
+    title: "Yainvest AG",
+    industry: "",
+    vertical: "",
+    canton: "Zug",
+    spinOffs: [],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Xelidoni SA",
+    title: "Xelidoni SA",
+    industry: "",
+    vertical: "",
+    canton: "Vaud",
+    spinOffs: [],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Ionic Wind AG",
+    title: "Ionic Wind AG",
+    industry: "",
+    vertical: "",
+    canton: "St. Gallen",
+    spinOffs: [],
+    city: "",
+    year: 2025,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "RoBoa AG",
+    title: "RoBoa AG",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2025,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Rapyuta Robotics AG",
+    title: "Rapyuta Robotics AG",
+    industry: "micro / nano",
+    vertical: "",
+    canton: "ZH",
+    spinOffs: ["ETH"],
+    city: "",
+    year: 2014,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "Rüedu AG",
+    title: "Rüedu AG",
+    industry: "consumer products",
+    vertical: "",
+    canton: "Bern",
+    spinOffs: [],
+    city: "Bern",
+    year: 2020,
+    highlights: [],
+    genderCEO: "Female",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Altiscreen Sàrl",
+    title: "Altiscreen Sàrl",
+    industry: "",
+    vertical: "",
+    canton: "Jura",
+    spinOffs: [],
+    city: "",
+    year: 2024,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Paymira AG",
+    title: "Paymira AG",
+    industry: "ICT",
+    vertical: "",
+    canton: "St. Gallen",
+    spinOffs: [],
+    city: "Rapperswil",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "QIO Quantitative Investment Office AG",
+    title: "QIO Quantitative Investment Office AG",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2020,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Bioscibex SA",
+    title: "Bioscibex SA",
+    industry: "",
+    vertical: "",
+    canton: "Valais / Wallis",
+    spinOffs: ["EPFL"],
+    city: "",
+    year: 2024,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "ViaSlim AG",
+    title: "ViaSlim AG",
+    industry: "healthcare IT",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "Zürich",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  // Continuing with the rest of the data...
+  {
+    code: "Dootix SA",
+    title: "Dootix SA",
+    industry: "ICT",
+    vertical: "",
+    canton: "FR",
+    spinOffs: [],
+    city: "Bulle",
+    year: 2012,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "DATAPROTECT AG",
+    title: "DATAPROTECT AG",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Amarastesia Sàrl",
+    title: "Amarastesia Sàrl",
+    industry: "",
+    vertical: "",
+    canton: "Jura",
+    spinOffs: [],
+    city: "Courroux",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Female",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Demiurge Technologies AG",
+    title: "Demiurge Technologies AG",
+    industry: "ICT",
+    vertical: "",
+    canton: "Zug",
+    spinOffs: [],
+    city: "",
+    year: 2015,
+    highlights: [],
+    genderCEO: "Female",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "DNAir AG",
+    title: "DNAir AG",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2025,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Vestir Technologies GmbH",
+    title: "Vestir Technologies GmbH",
+    industry: "",
+    vertical: "",
+    canton: "Zug",
+    spinOffs: [],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Ivy Solutions SA",
+    title: "Ivy Solutions SA",
+    industry: "",
+    vertical: "",
+    canton: "Genève",
+    spinOffs: [],
+    city: "",
+    year: 2020,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "ProLean GmbH",
+    title: "ProLean GmbH",
+    industry: "",
+    vertical: "",
+    canton: "LU",
+    spinOffs: [],
+    city: "",
+    year: 2021,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Herlock Insights AG",
+    title: "Herlock Insights AG",
+    industry: "ICT",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2021,
+    highlights: [],
+    genderCEO: "Female",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "Legal Technology Switzerland AG",
+    title: "Legal Technology Switzerland AG (Proxeus)",
+    industry: "ICT (fintech)",
+    vertical: "",
+    canton: "Zug",
+    spinOffs: [],
+    city: "",
+    year: 2016,
+    highlights: ["Top 100 Swiss Startup Award 2018"],
+    genderCEO: "",
+    oob: true,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Novexus",
+    title: "Novexus",
+    industry: "",
+    vertical: "",
+    canton: "Basel-Stadt",
+    spinOffs: [],
+    city: "",
+    year: 2017,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "surp.ch GmbH",
+    title: "surp.ch GmbH",
+    industry: "",
+    vertical: "",
+    canton: "St. Gallen",
+    spinOffs: ["HSG"],
+    city: "",
+    year: 2015,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Cellsmaniak SA",
+    title: "Cellsmaniak SA (VEETAMINE)",
+    industry: "",
+    vertical: "",
+    canton: "Valais / Wallis",
+    spinOffs: [],
+    city: "",
+    year: 2020,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "precisionED",
+    title: "precisionED",
+    industry: "healthcare IT",
+    vertical: "",
+    canton: "SZ",
+    spinOffs: [],
+    city: "",
+    year: 2020,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "Digital Frontiers GmbH",
+    title: "Digital Frontiers GmbH (vosh)",
+    industry: "",
+    vertical: "",
+    canton: "LU",
+    spinOffs: [],
+    city: "",
+    year: 2017,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Well Gesundheit AG",
+    title: "Well Gesundheit AG",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2020,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "wearefreemovers GmbH",
+    title: "wearefreemovers GmbH",
+    industry: "",
+    vertical: "",
+    canton: "Zug",
+    spinOffs: [],
+    city: "",
+    year: 2024,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Fleeps",
+    title: "Fleeps",
+    industry: "",
+    vertical: "",
+    canton: "Bern",
+    spinOffs: ["EPFL"],
+    city: "",
+    year: 2022,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "OptoLumina AG",
+    title: "OptoLumina AG",
+    industry: "",
+    vertical: "",
+    canton: "Bern",
+    spinOffs: [],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Engimmune Therapeutics AG",
+    title: "Engimmune Therapeutics AG",
+    industry: "biotech",
+    vertical: "",
+    canton: "Basel-Stadt",
+    spinOffs: ["ETH"],
+    city: "Basel",
+    year: 2021,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "SmartHelio Sarl",
+    title: "SmartHelio Sarl",
+    industry: "cleantech",
+    vertical: "",
+    canton: "VD",
+    spinOffs: ["EPFL"],
+    city: "Lausanne",
+    year: 2019,
+    highlights: ["Winner Venture Kick", "Innosuisse Certificate"],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "Nerai Bioscience AG",
+    title: "Nerai Bioscience AG",
+    industry: "biotech",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2025,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Eldy SA",
+    title: "Eldy SA",
+    industry: "ICT",
+    vertical: "",
+    canton: "Vaud",
+    spinOffs: [],
+    city: "Morges",
+    year: 2025,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Supervised AG",
+    title: "Supervised AG",
+    industry: "ICT",
+    vertical: "",
+    canton: "ZG",
+    spinOffs: [],
+    city: "Zug",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "SwissInspect Sàrl",
+    title: "SwissInspect Sàrl",
+    industry: "",
+    vertical: "",
+    canton: "Vaud",
+    spinOffs: ["EPFL"],
+    city: "Lausanne",
+    year: 2021,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "MIROS Technology SA",
+    title: "MIROS Technology SA",
+    industry: "",
+    vertical: "",
+    canton: "Vaud",
+    spinOffs: ["EPFL"],
+    city: "",
+    year: 2023,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "BioCopy AG",
+    title: "BioCopy AG",
+    industry: "biotech",
+    vertical: "",
+    canton: "Basel-Stadt",
+    spinOffs: [],
+    city: "Basel",
+    year: 2018,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Lobby AG",
+    title: "Lobby AG",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2025,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Albatross AI",
+    title: "Albatross AI",
+    industry: "ICT",
+    vertical: "",
+    canton: "Zug",
+    spinOffs: [],
+    city: "Baar",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Adularia",
+    title: "Adularia",
+    industry: "biotech",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: ["Universität Zürich"],
+    city: "",
+    year: 2022,
+    highlights: ["Winner Venture Kick", "Top 100 Swiss Startup Award 2023", "Top 100 Swiss Startup Award 2024"],
+    genderCEO: "Female",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "INAIT SA",
+    title: "INAIT SA",
+    industry: "Deep Tech",
+    vertical: "",
+    canton: "Vaud",
+    spinOffs: ["EPFL"],
+    city: "Lausanne",
+    year: 2016,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Sustema AG",
+    title: "Sustema AG",
+    industry: "ICT",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2017,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "AdminTech Sàrl",
+    title: "AdminTech Sàrl",
+    industry: "",
+    vertical: "",
+    canton: "Genève",
+    spinOffs: [],
+    city: "",
+    year: 2021,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "reviewr.ai AG",
+    title: "reviewr.ai AG (Kadoa)",
+    industry: "ICT",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "Zürich",
+    year: 2021,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "TheraPPI Bioscience SA",
+    title: "TheraPPI Bioscience SA",
+    industry: "biotech",
+    vertical: "",
+    canton: "Genève",
+    spinOffs: [],
+    city: "Plan-les-Ouates",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Volv Global SA",
+    title: "Volv Global SA",
+    industry: "",
+    vertical: "",
+    canton: "Vaud",
+    spinOffs: [],
+    city: "Epalinges",
+    year: 2017,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Straintest GmbH",
+    title: "Straintest GmbH",
+    industry: "Deep Tech",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "Zürich",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Roomfs SA",
+    title: "Roomfs SA",
+    industry: "",
+    vertical: "",
+    canton: "Genève",
+    spinOffs: [],
+    city: "",
+    year: 2022,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "ph. AG",
+    title: "ph. AG (KA-EX)",
+    industry: "consumer products",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2016,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "Aiducation International Schweiz",
+    title: "Aiducation International Schweiz",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2009,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "iWin - innovative Window SA",
+    title: "iWin - innovative Window SA",
+    industry: "",
+    vertical: "",
+    canton: "Ticino",
+    spinOffs: [],
+    city: "",
+    year: 2019,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Koa Switzerland GmbH",
+    title: "Koa Switzerland GmbH",
+    industry: "cleantech",
+    vertical: "",
+    canton: "ZH",
+    spinOffs: [],
+    city: "",
+    year: 2017,
+    highlights: ["Winner Venture Kick"],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "8gears AG",
+    title: "8gears AG",
+    industry: "",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: [],
+    city: "",
+    year: 2015,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "BOOKBRIDGE FOUNDATION",
+    title: "BOOKBRIDGE FOUNDATION",
+    industry: "",
+    vertical: "",
+    canton: "Basel-Stadt",
+    spinOffs: [],
+    city: "",
+    year: 2010,
+    highlights: [],
+    genderCEO: "",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Carnault AG",
+    title: "Carnault AG",
+    industry: "consumer products",
+    vertical: "",
+    canton: "Basel-Stadt",
+    spinOffs: [],
+    city: "Basel",
+    year: 2016,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: true,
+    comment: ""
+  },
+  {
+    code: "RWAI Schweiz AG",
+    title: "RWAI Schweiz AG",
+    industry: "ICT",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: ["ZHAW"],
+    city: "Winterthur",
+    year: 2025,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Rimon Technologies GmbH",
+    title: "Rimon Technologies GmbH",
+    industry: "ICT",
+    vertical: "",
+    canton: "Zürich",
+    spinOffs: ["ETH"],
+    city: "Zurich",
+    year: 2020,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  },
+  {
+    code: "Clee Medical SA",
+    title: "Clee Medical SA",
+    industry: "medtech",
+    vertical: "",
+    canton: "Genève",
+    spinOffs: [],
+    city: "Geneva",
+    year: 2024,
+    highlights: [],
+    genderCEO: "Male",
+    oob: false,
+    funded: false,
+    comment: ""
+  }]; // Array of Company objects
+        const deals = [ {
+    id: "S4126",
+    investors: "Elastic",
+    amount: null,
+    valuation: null,
+    comment: "",
+    url: "https://www.elastic.co/de/about/press/elastic-and-optimyze-join-forces-to-deliver-continuous-profiling-of-infrastructure-applications-and-services",
+    confidential: false,
+    amountConfidential: false,
+    dateOfFundingRound: new Date("2021-10-14"),
+    type: "EXIT",
+    phase: "",
+    canton: "ZH",
+    company: "optimyze.cloud AG",
+    genderCEO: "Male"
+  },
+  {
+    id: "S4125",
+    investors: "n.a.",
+    amount: null,
+    valuation: null,
+    comment: "",
+    url: "https://www.startupticker.ch/en/news/therappi-completes-first-closing-of-pre-seed-financing",
+    confidential: false,
+    amountConfidential: true,
+    dateOfFundingRound: new Date("2025-03-21"),
+    type: "VC",
+    phase: "Early Stage",
+    canton: "Genève",
+    company: "TheraPPI Bioscience SA",
+    genderCEO: "Male"
+  },
+  {
+    id: "S4124",
+    investors: "Investorengruppe aus erfahrenen Family Offices und namhaften Unternehmerinnen und Unternehmern",
+    amount: 7700000,
+    valuation: null,
+    comment: "",
+    url: "https://www.startupticker.ch/en/news/8-millionen-fuer-biotech-startup-biocopy",
+    confidential: false,
+    amountConfidential: false,
+    dateOfFundingRound: new Date("2025-03-21"),
+    type: "VC",
+    phase: "",
+    canton: "Basel-Stadt",
+    company: "BioCopy AG",
+    genderCEO: "Male"
+  },
+  {
+    id: "S4123",
+    investors: "Angel investors and TiVentures",
+    amount: 1100000,
+    valuation: null,
+    comment: "",
+    url: "https://www.startupticker.ch/en/news/gaia-turbine-raises-chf-1-1-million",
+    confidential: false,
+    amountConfidential: false,
+    dateOfFundingRound: new Date("2025-03-21"),
+    type: "VC",
+    phase: "Seed",
+    canton: "TI",
+    company: "Gaia Turbine SA",
+    genderCEO: "Male"
+  },];     // Array of Deal objects
+
+        // Helper function to get the year from a Date object
+        function getYear(date) {
+            return date ? date.getFullYear() : null;
+        }
+
+        // Function to prepare data for charts (startup counts and funding by sector and year)
+        function prepareChartData(companies, deals) {
+            const startupCounts = {}; // { year: { sector: count } }
+            const fundingAmounts = {}; // { year: { sector: amount } }
+            const sectorMap = {
+                "ICT (fintech)": "ICT",
+                "micro / nano": "Deep Tech"
+                // Add more mappings as needed
+            };
+
+            // Process company data to count startups by sector and year
+            companies.forEach(company => {
+                const year = company.year;
+                let sector = company.industry || "Unspecified"; // Use 'Unspecified' for unknown sectors
+                sector = sectorMap[sector] || sector;
+
+                if (!startupCounts[year]) {
+                    startupCounts[year] = {};
+                }
+                startupCounts[year][sector] = (startupCounts[year][sector] || 0) + 1;
+            });
+
+            // Process deal data to sum funding amounts by sector and year
+            deals.forEach(deal => {
+                const year = getYear(deal.dateOfFundingRound);
+                if (!year) return; // Skip if funding date is missing
+
+                const company = companies.find(c => c.code === deal.company);
+                if (!company) return; // Skip if company not found
+
+                let sector = company.industry || "Unspecified";
+                sector = sectorMap[sector] || sector;
+                const amount = deal.amountConfidential ? 0 : deal.amount; //Excluding confidential deals
+                if (amount == null) return;
+
+                if (!fundingAmounts[year]) {
+                    fundingAmounts[year] = {};
+                }
+                fundingAmounts[year][sector] = (fundingAmounts[year][sector] || 0) + amount;
+            });
+
+            // Convert data to Chart.js format (example for line chart)
+            const labels = Array.from(new Set([...Object.keys(startupCounts), ...Object.keys(fundingAmounts)]))
+                .sort(); // Sorted years
+
+            const sectors = Array.from(new Set(companies.map(c => sectorMap[c.industry] || c.industry))).filter(Boolean);
+            const datasetsStartupCounts = sectors.map(sector => {
+                return {
+                    label: sector,
+                    data: labels.map(year => (startupCounts[year] && startupCounts[year][sector]) || 0),
+                    borderColor: '#' + Math.floor(Math.random() * 16777215).toString(16),
+                    fill: false
+                };
+            });
+
+            const datasetsFundingAmounts = sectors.map(sector => {
+                return {
+                    label: sector,
+                    data: labels.map(year => (fundingAmounts[year] && fundingAmounts[year][sector]) || 0),
+                    borderColor: '#' + Math.floor(Math.random() * 16777215).toString(16),
+                    fill: false
+                };
+            });
+
+            return {
+                labels,
+                datasetsStartupCounts,
+                datasetsFundingAmounts
+            };
+        }
+
+        // Check if the data arrays are populated before processing
+        if (companies.length > 0 && deals.length > 0) {
+            const chartData = prepareChartData(companies, deals);
+
+            // --- Startup Counts Chart ---
+            const startupCountsChartData = {
+                labels: chartData.labels,
+                datasets: chartData.datasetsStartupCounts
+            };
+
+            const startupCountsChartConfig = {
+                type: 'line',
+                data: startupCountsChartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Startup Counts by Sector Over Time'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Startup Count'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            };
+
+            // --- Funding Amounts Chart ---
+            const fundingAmountsChartData = {
+                labels: chartData.labels,
+                datasets: chartData.datasetsFundingAmounts
+            };
+
+            const fundingAmountsChartConfig = {
+                type: 'line',
+                data: fundingAmountsChartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Funding Amounts by Sector Over Time'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Funding Amount'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            };
+
+            // To use these configurations, you would create Chart.js chart instances:
+            const startupCountsChart = new Chart(document.getElementById('startupCountsChart'), startupCountsChartConfig);
+            const fundingAmountsChart = new Chart(document.getElementById('fundingAmountsChart'), fundingAmountsChartConfig);
+        } else {
+            // Display a message if the data is missing
+            document.body.innerHTML = "<p>Please populate the 'companies' and 'deals' arrays with data to see the charts.</p>";
+        }
+    </script>
+
+</body>
+</html>

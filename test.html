@@ -14,6 +14,12 @@
             width: 80%;
             margin: 20px auto;
         }
+        #analysis-summary {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -26,6 +32,11 @@
 
     <div class="chart-container">
         <canvas id="fundingAmountsChart"></canvas>
+    </div>
+
+    <div id="analysis-summary">
+        <h2>Analysis Summary</h2>
+        <p id="analysis-text"><em>Data is missing. Please populate the 'companies' and 'deals' arrays with data to see the charts and the analysis summary.</em></p>
     </div>
 
     <script>
@@ -1169,15 +1180,15 @@
     canton: "TI",
     company: "Gaia Turbine SA",
     genderCEO: "Male"
-  },];     // Array of Deal objects
+  },];      // Array of Deal objects
 
         // Helper function to get the year from a Date object
         function getYear(date) {
             return date ? date.getFullYear() : null;
         }
 
-        // Function to prepare data for charts (startup counts and funding by sector and year)
-        function prepareChartData(companies, deals) {
+        // Function to prepare data for charts (startup counts and funding by sector and year) and perform analysis
+        function prepareChartDataAndAnalyze(companies, deals) {
             const startupCounts = {}; // { year: { sector: count } }
             const fundingAmounts = {}; // { year: { sector: amount } }
             const sectorMap = {
@@ -1243,13 +1254,82 @@
             return {
                 labels,
                 datasetsStartupCounts,
-                datasetsFundingAmounts
+                datasetsFundingAmounts,
+                startupCounts,
+                fundingAmounts
             };
         }
 
+        function generateAnalysisSummary(startupCounts, fundingAmounts) {
+            let analysisText = "";
+            let answer = "It cannot be determined if certain sectors are growing in terms of number of startups or funding. "
+            if (Object.keys(startupCounts).length === 0 || Object.keys(fundingAmounts).length === 0) {
+                analysisText = "Insufficient data to perform a meaningful analysis.  Please ensure the 'companies' and 'deals' arrays are populated.";
+                return answer + analysisText;
+            }
+
+            // Find sector with most startups
+            let maxStartupSector = "";
+            let maxStartupCount = 0;
+            for (const year in startupCounts) {
+                for (const sector in startupCounts[year]) {
+                    if (startupCounts[year][sector] > maxStartupCount) {
+                        maxStartupCount = startupCounts[year][sector];
+                        maxStartupSector = sector;
+                    }
+                }
+            }
+
+            // Find sector with most funding
+            let maxFundingSector = "";
+            let maxFundingAmount = 0;
+             // Track growth based on funding and startup count
+            let growingSectors = [];
+
+            for (const year in fundingAmounts) {
+                for (const sector in fundingAmounts[year]) {
+                    if (fundingAmounts[year][sector] > maxFundingAmount) {
+                        maxFundingAmount = fundingAmounts[year][sector];
+                        maxFundingSector = sector;
+                    }
+                }
+            }
+
+                // Check if any sectors are showing growth in funding
+            let lastYearFunding = {}; // Store funding amounts for the previous year
+            for (const year in fundingAmounts) {
+                for (const sector in fundingAmounts[year]) {
+                    const currentFunding = fundingAmounts[year][sector];
+                    const previousFunding = lastYearFunding[sector] || 0;
+
+                    if (currentFunding > previousFunding) {
+                        growingSectors.push(sector);
+                    }
+
+                    lastYearFunding[sector] = currentFunding; // Update for the next iteration
+                }
+            }
+          let growingSectorsList = [...new Set(growingSectors)] //remove duplicates
+             if (growingSectorsList.length > 0) {
+                 answer = `Yes, the following sectors are growing in terms of funding: ${growingSectorsList.join(", ")}.`;
+                } else {
+                  answer = "No, there are no sectors growing in terms of funding. ";
+                }
+            if(maxStartupSector != "" && maxFundingSector != ""){
+              analysisText += `Based on the available data, the sector with the most startups is ${maxStartupSector}. The sector receiving the most funding is ${maxFundingSector}.`
+
+            } else{
+              analysisText += "Unable to derive the sectors with the most funding and startups."
+
+            }
+
+            return answer + analysisText;
+        }
+
+
         // Check if the data arrays are populated before processing
         if (companies.length > 0 && deals.length > 0) {
-            const chartData = prepareChartData(companies, deals);
+            const chartData = prepareChartDataAndAnalyze(companies, deals);
 
             // --- Startup Counts Chart ---
             const startupCountsChartData = {
@@ -1328,9 +1408,15 @@
             // To use these configurations, you would create Chart.js chart instances:
             const startupCountsChart = new Chart(document.getElementById('startupCountsChart'), startupCountsChartConfig);
             const fundingAmountsChart = new Chart(document.getElementById('fundingAmountsChart'), fundingAmountsChartConfig);
+
+            // Generate and display analysis summary
+            const analysisSummary = generateAnalysisSummary(chartData.startupCounts, chartData.fundingAmounts);
+            document.getElementById("analysis-text").textContent = analysisSummary;
+
+
         } else {
             // Display a message if the data is missing
-            document.body.innerHTML = "<p>Please populate the 'companies' and 'deals' arrays with data to see the charts.</p>";
+            document.getElementById("analysis-text").textContent = "Please populate the 'companies' and 'deals' arrays with data to see the charts and the analysis summary.";
         }
     </script>
 

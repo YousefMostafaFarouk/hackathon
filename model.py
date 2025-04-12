@@ -1,186 +1,8 @@
 
-class DataAnalyzer {
-    constructor() {
-        // Initialize model configuration
-        this.modelName = "mistralai/Mistral-7B-Instruct-v0.1";
-        this.tokenizer = null;
-        this.model = null;
-        this.visualizer = new DataVisualizer();
-    }
-
-    async init() {
-        // Load tokenizer and model
-        const { AutoTokenizer, AutoModelForCausalLM } = await import('@huggingface/transformers');
-        this.tokenizer = await AutoTokenizer.from_pretrained(this.modelName);
-        this.model = await AutoModelForCausalLM.from_pretrained(this.modelName, {
-            deviceMap: "auto",
-            torchDtype: "auto"
-        });
-    }
-
-    async analyzeRequest(userInput, dbPath) {
-        // Process user request and return visualization
-        const sqlQuery = await this._generateSqlQuery(userInput);
-        const results = await this._executeSqlQuery(sqlQuery, dbPath);
-        const vizType = await this._determineVisualization(userInput, sqlQuery);
-        return this._createVisualization(results, vizType);
-    }
-
-    async _generateSqlQuery(userInput) {
-        const schemaContext = `
-            Available tables and columns:
-            - companies: code, title, industry, vertical, canton, city, year, genderCEO, oob, funded
-            - company_highlights: company_code, highlight_text, highlight_date
-            - deals: id, company_code, amount, valuation, type, phase, dateOfFundingRound
-        `;
-
-        const prompt = `Convert this request into SQL, using the following schema:
-            ${schemaContext}
-            
-            Request: ${userInput}
-            
-            SQL Query:`;
-
-        const inputs = await this.tokenizer(prompt, { 
-            returnTensors: "pt",
-            toPlatform: this.model.device 
-        });
-
-        const outputs = await this.model.generate(inputs, {
-            maxNewTokens: 200,
-            doSample: true,
-            temperature: 0.7,
-            topP: 0.95
-        });
-
-        const generatedText = await this.tokenizer.decode(outputs[0], {
-            skipSpecialTokens: true
-        });
-
-        return generatedText.split("SQL Query:")[1].trim();
-    }
-
-    async _executeSqlQuery(sqlQuery, dbPath) {
-        // Using better-sqlite3 for Node.js
-        const Database = require('better-sqlite3');
-        const db = new Database(dbPath);
-        
-        try {
-            const stmt = db.prepare(sqlQuery);
-            const results = stmt.all();
-            return results;
-        } finally {
-            db.close();
-        }
-    }
-
-    async _determineVisualization(userInput, sqlQuery) {
-        const prompt = `
-            Based on this user request and SQL query, what type of visualization would be most appropriate?
-            Options: time_series, comparison, distribution, geographic
-            
-            User request: ${userInput}
-            SQL query: ${sqlQuery}
-            
-            Visualization type:`;
-
-        const inputs = await this.tokenizer(prompt, {
-            returnTensors: "pt",
-            toPlatform: this.model.device
-        });
-
-        const outputs = await this.model.generate(inputs, {
-            maxNewTokens: 50,
-            doSample: false
-        });
-
-        const vizType = await this.tokenizer.decode(outputs[0], {
-            skipSpecialTokens: true
-        });
-
-        return vizType.split("Visualization type:")[1].trim();
-    }
-
-    _createVisualization(data, vizType) {
-        // Using Chart.js for visualization
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        let chart;
-
-        switch(vizType) {
-            case 'time_series':
-                chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: Object.keys(data),
-                        datasets: [{
-                            data: Object.values(data)
-                        }]
-                    },
-                    options: {
-                        responsive: true
-                    }
-                });
-                break;
-
-            case 'comparison':
-                chart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: Object.keys(data),
-                        datasets: [{
-                            data: Object.values(data)
-                        }]
-                    },
-                    options: {
-                        responsive: true
-                    }
-                });
-                break;
-
-            case 'distribution':
-                chart = new Chart(ctx, {
-                    type: 'histogram',
-                    data: {
-                        datasets: [{
-                            data: Object.values(data)
-                        }]
-                    },
-                    options: {
-                        responsive: true
-                    }
-                });
-                break;
-
-            case 'geographic':
-                chart = new Chart(ctx, {
-                    type: 'scatter',
-                    data: {
-                        datasets: [{
-                            data: data.map(d => ({
-                                x: d.longitude,
-                                y: d.latitude
-                            }))
-                        }]
-                    },
-                    options: {
-                        responsive: true
-                    }
-                });
-                break;
-        }
-
-        return canvas;
-    }
-}
-
-module.exports = DataAnalyzer;
-
-
-
 #from transformers import AutoTokenizer, AutoModelForCausalLM
 #import sqlite3
-#
+#import pandas as pd
+
 #class DataAnalyzer:
  #   """Handles data analysis and visualization using LLM for query interpretation"""
  #   
@@ -193,7 +15,18 @@ module.exports = DataAnalyzer;
  #           torch_dtype="auto"
  #       )
  #       self.visualizer = DataVisualizer()
- #       
+#        self.columns = self._get_table_info(db_path)
+
+ #   def _get_table_info(db_path: str) -> dict:
+ #    """Get table names and column names from database"""
+ #    conn = sqlite3.connect(db_path)
+ #    try:
+ #        tables = pd.read_sql_query("SELECT name FROM sqlite_master WHERE type='table'", conn)
+ #        columns = {table: pd.read_sql_query(f"PRAGMA table_info({table})", conn)['name'].tolist() for table in tables['name']} 
+ #        return columns
+ #    finally:
+ #        conn.close()     
+
  #   def analyze_request(self, user_input: str, db_path: str) -> plt.Figure:
  #       """Process user request using LLM and return visualization"""
  #       # Generate SQL query from natural language input
@@ -209,12 +42,18 @@ module.exports = DataAnalyzer;
  #       
  #   def _generate_sql_query(self, user_input: str) -> str:
  #       """Generate SQL query from natural language using Mistral"""
- #       schema_context = """
- #       Available tables and columns:
- #       - companies: code, title, industry, vertical, canton, city, year, genderCEO, oob, funded
- #       - company_highlights: company_code, highlight_text, highlight_date
- #       - deals: id, company_code, amount, valuation, type, phase, dateOfFundingRound
- #       """
+
+ #
+ #       schema_context = get_table_info(db_path)
+
+ # #      schema_context = """
+ # #      Available tables and columns:
+ # #      - companies: code, title, industry, vertical, canton, city, year, genderCEO, oob, funded
+ # #      - company_highlights: company_code, highlight_text, highlight_date
+ # #      - deals: id, company_code, amount, valuation, type, phase, dateOfFundingRound
+ # #      """
+
+
  #       
  #       prompt = f"""Convert this request into SQL, using the following schema:
  #       {schema_context}
@@ -287,6 +126,22 @@ module.exports = DataAnalyzer;
  #       plt.tight_layout()
  #
  #       return fig
+# data_analyzer = DataAnalyzer()
+
+#user_input = input("Enter your request: ")
+#db_path = "path/to/your/database.db"
+#fig = data_analyzer.analyze_request(user_input, db_path)
+# fig.show()
+
+
+
+
+
+
+
+
+
+
 
 
 

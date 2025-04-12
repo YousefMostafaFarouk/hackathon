@@ -187,7 +187,7 @@ def get_deal_data(id: str,
         phase (str): Startup phase (e.g. "Seed", "Early Stage", "Later Stage"). Use "" to ignore.
         canton (str): Two-letter Swiss canton code (e.g. "ZH"). Use "" to ignore.
         company (str): Company name. Use "" to ignore.
-        ceo_gender (str): Gender of the CEO ("M", "F", etc.). Use "" to ignore.
+        ceo_gender (str): Gender of the CEO ("Male", "Female", etc.). Use "" to ignore.
 
     Returns:
         pd.DataFrame: A filtered DataFrame containing all deals that match the given criteria.
@@ -208,6 +208,7 @@ def get_deal_data(id: str,
     features = pd.Series(features)
     features = features[features != ""]
     features = features[features != -1]
+    print(features)
     mask = (df_deal[list(features.index)] == features).all(axis=1)
     df_deal = df_deal[mask]
 
@@ -226,3 +227,4 @@ def get_deal_data(id: str,
         df_deal = df_deal[pd.to_datetime(df_deal['Date of the funding round']) <= pd.to_datetime(time_end)]
 
     return df_deal.to_json(orient="records")
+

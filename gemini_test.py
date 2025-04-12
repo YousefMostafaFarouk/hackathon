@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 import google.generativeai as genai
-
+# I want to fetch the data from the excel file and return a list of dictionaries
 def fetchCompanyData():
     df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Companies")
     df = df.astype(str)

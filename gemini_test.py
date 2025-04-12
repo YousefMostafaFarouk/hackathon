@@ -14,7 +14,7 @@ def fetchDealData():
 
 # Initialize Gemini
 genai.configure(api_key="AIzaSyAbIqSSiCZZEa5SMqVQ43ut6q30nKOhcvQ")  # Replace with your actual API key
-model = genai.GenerativeModel("gemini-1.5-pro")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 def ask_gemini(question: str):
     companies = fetchCompanyData()

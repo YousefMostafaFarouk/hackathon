@@ -1,59 +1,63 @@
-# we want a function that  column name from a csv file and return the name from the table   
 import pandas as pd
+from pandasql import sqldf
 from google import genai
 import os
 import httpx
 
-
-def get_column_name_function(csv_file : str) -> list[str]:
+def get_column_name_function(csv_file: str) -> list[str]:
     """
-    This function is used to get the column name from the csv file
+    This function gets the column names from the CSV file.
 
     Args:
-        csv_file (str): The csv file to get the column name from
+        csv_file (str): The CSV file to get the column names from.
 
     Returns:
-        list[str]: The column name from the csv file
+        list[str]: A list of column names from the CSV file.
     """
-    # read the csv file
+    # Read the CSV file
     df = pd.read_csv(csv_file)
-    # get the column name
-    column_names = df.columns
-    return column_names.tolist()
+    # Get the column names and return them as a list
+    return df.columns.tolist()
 
-def get_data_by_attribute_function(csv_file : str, attributes : list[str]) -> list[str]:
+def query_csv_with_pandasql(csv_file: str, sql_query: str) -> list[dict]:
     """
-    This function is used to get the data from the csv file by the attribute
+    This function queries the CSV file with the SQL query.
 
     Args:
-        csv_file (str): The csv file to get the data from
-        attribute (list[str]): The attribute to get the data from
+        csv_file (str): The CSV file to query.
+        sql_query (str): The SQL query for filtering the CSV file.
 
     Returns:
-        list[list[str]]: A list containing the data for each requested attribute
+        list[dict]: A list of dictionaries containing the query results
     """
-    # read the csv file
+    # Read the CSV file into a DataFrame
     df = pd.read_csv(csv_file)
-    # get the data by the attributes
-    result = []
-    for attribute in attributes:
-        data = df[attribute].tolist()
-        result.append(data)
-    return result
+    
+    # Set up a lambda for pandasql which restricts the scope to the DataFrame
+    pysqldf = lambda q: sqldf(q, {"df": df})
+    
+    # Execute the SQL query
+    result_df = pysqldf(sql_query)
+    
+    # Convert the result DataFrame into a list of dictionaries and return
+    return result_df.to_dict(orient='records')
 
-config = genai.types.GenerateContentConfig(tools=[get_column_name_function, get_data_by_attribute_function])
+# Configuration for the client; your functions are provided as tools.
+config = {
+    "tools": [get_column_name_function, query_csv_with_pandasql],
+    "system_instruction": " using csv file name = 'Data-startupticker.csv' the name of the table is df and always "
+}
 
-client = genai.Client(api_key=("AIzaSyB57DPx67DwuoetWePSm7eabr5Rw7U-RPE"))
+client = genai.Client(api_key="AIzaSyB57DPx67DwuoetWePSm7eabr5Rw7U-RPE")
 
-contents = [genai.types.Content(role="user", parts=[genai.types.Part(text="What is the column names of 'Data-startupticker.csv' file?")])]
-
-response = client.models.generate_content(model="gemini-2.0-flash", contents="what are the names of the columns in the 'Data-startupticker.csv' file?", config=config)
-
-print(response.candidates[0].content.parts[0].function_call)
-tool_call = response.candidates[0].content.parts[0].function_call
+# Example query: make sure your SQL query is valid. Here, we assume the 'df' table contains
+# a column that might refer to the city or location to filter startups in Zurich.
+prompt = input("")
+response = client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents= "make sure to use get_column_name_function first to know the column names "+prompt,
+    config=config
+)
+#print(response)
 print(response.text)
-
-
-
-
-
+#print(response.function_response.response) #what are other thing I can use for the response other than text? 

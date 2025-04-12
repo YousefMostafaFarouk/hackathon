@@ -107,7 +107,7 @@ def get_data_by_attribute_function(Code : str,
     # read the data
     df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Companies")
 
-    df = get_company_df
+    df = get_company_df()
     
     # get the data by the attribute
     features = {
@@ -151,3 +151,78 @@ def early_stage_investment_volume(Industry : str) -> float:
     df_deal = df_deal[(df_deal['Phase'] == 'Early Stage') | (df_deal['Phase'] == 'Seed')]
     return np.sum(df_deal['Amount'])
 
+def get_deal_data(id: str,
+                  investor: str,
+                  min_amount: int,
+                  max_amount: int,
+                  confidential: int,
+                  min_valuation: int,
+                  max_valuation: int,
+                  time_start: str,
+                  time_end: str,
+                  type: str,
+                  phase: str,
+                  canton: str,
+                  company: str,
+                  ceo_gender: str,
+                  ) -> pd.DataFrame:
+    """
+    Filters and returns deal entries from the startup dataset based on investor name, financial thresholds, time range, and company attributes.
+
+    This function merges deal data with company metadata, standardizes canton names, and applies a flexible set of filters.
+    String-based attributes (e.g. company name, phase, gender) can be ignored by passing an empty string `""`. 
+    Numerical filters (e.g. funding amount, valuation) can be skipped by passing `-1`.
+
+    Args:
+        id (str): Exact deal ID to filter by. Use "" to ignore.
+        investor (str): Investor name or regex pattern to match in the 'Investors' column. Case-insensitive.
+        min_amount (int): Minimum funding amount. Use -1 to ignore.
+        max_amount (int): Maximum funding amount. Use -1 to ignore.
+        confidential (int): 1 for confidential deals, 0 for public, -1 to ignore.
+        min_valuation (int): Minimum company valuation. Use -1 to ignore.
+        max_valuation (int): Maximum company valuation. Use -1 to ignore.
+        time_start (str): Start date in string format (e.g. "2022-01-01"). Use "" to ignore.
+        time_end (str): End date in string format. Use "" to ignore.
+        type (str): Deal type (e.g. "Equity", "Grant"). Use "" to ignore.
+        phase (str): Startup phase (e.g. "Seed", "Early Stage", "Later Stage"). Use "" to ignore.
+        canton (str): Two-letter Swiss canton code (e.g. "ZH"). Use "" to ignore.
+        company (str): Company name. Use "" to ignore.
+        ceo_gender (str): Gender of the CEO ("M", "F", etc.). Use "" to ignore.
+
+    Returns:
+        pd.DataFrame: A filtered DataFrame containing all deals that match the given criteria.
+    """
+    df_deal = pd.read_excel("Data-startupticker.xlsx", sheet_name="Deals")
+    df_comp = get_company_df()
+    df_comp_subset = df_comp[['Title', 'Industry', 'City']].copy()
+    df_deal = df_deal.merge(df_comp_subset, left_on='Company', right_on='Title', how='left')
+    df_deal['Canton'] = df_deal['Canton'].map(canton_map)
+
+    #filter for investors
+    if investor != "":
+        mask = df_deal["Investors"].astype(str).str.contains(investor, case=False, regex=True, na=False)
+        df_deal = df_deal[mask]
+    
+    #filter for discret features
+    features = {'Id': id, 'Investor': investor,  'Confidential': confidential,   'Type': type, 'Phase': phase, 'Canton': canton, 'Company': company, 'Gender CEO': ceo_gender}
+    features = pd.Series(features)
+    features = features[features != ""]
+    features = features[features != -1]
+    mask = (df_deal[list(features.index)] == features).all(axis=1)
+    df_deal = df_deal[mask]
+
+    #filter for continuous features
+    if min_amount != -1:
+        df_deal = df_deal[df_deal['Amount'] >= min_amount]
+    if max_amount != -1:
+        df_deal = df_deal[df_deal['Amount'] <= max_amount]
+    if min_valuation != -1:
+        df_deal = df_deal[df_deal['Valuation'] >= min_valuation]
+    if max_valuation != -1:
+        df_deal = df_deal[df_deal['Valuation'] <= max_valuation]
+    if time_start != "":
+        df_deal = df_deal[pd.to_datetime(df_deal['Date of the funding round']) >= pd.to_datetime(time_start)]
+    if time_end != "":
+        df_deal = df_deal[pd.to_datetime(df_deal['Date of the funding round']) <= pd.to_datetime(time_end)]
+
+    return df_deal.to_json(orient="records")

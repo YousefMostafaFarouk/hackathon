@@ -132,7 +132,7 @@ def get_data_by_attribute_function(Code : str,
     return df.to_dict(orient="records")
 
 
-def early_stage_investment_volume(Industry) -> float:
+def early_stage_investment_volume(Industry : str) -> float:
     """
     This function is used to get the early stage investment volume by industry
     Args:
@@ -150,5 +150,4 @@ def early_stage_investment_volume(Industry) -> float:
         df_deal = df_deal[df_deal["Industry"] == Industry]
     df_deal = df_deal[(df_deal['Phase'] == 'Early Stage') | (df_deal['Phase'] == 'Seed')]
     return np.sum(df_deal['Amount'])
-early_stage_investment_volume()
 

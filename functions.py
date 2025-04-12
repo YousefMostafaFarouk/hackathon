@@ -71,14 +71,22 @@ def get_data_by_attribute_function(Code : str,
                                    OOB : int,
                                    Funded : int) -> list[str]:
     """
-    This function is used to get the data from the excel sheet  by the attribute
+    Retrieves filtered company data from the 'Companies' sheet of the Excel file based on the provided attributes.
 
     Args:
-        csv_file (str): The csv file to get the data from
-        attribute (list[str]): The attribute to get the data from
+        Code (str): Unique identifier for the company. Use an empty string ("") to ignore.
+        Title (str): Company name. Use an empty string ("") to ignore.
+        Industry (str): Industry name (e.g., "Biotech"). Use an empty string ("") to ignore.
+        Canton (str): Two-letter Swiss canton code (e.g., "ZH"). Use an empty string ("") to ignore.
+        Spin_offs (str): Spin-off institution (e.g., "ETH"). Use an empty string ("") to ignore.
+        City (str): Company location. Use an empty string ("") to ignore.
+        Year (int): Founding year. Use -1 to ignore.
+        CEO_Gender (str): Gender of the CEO ("M", "F", or other). Use an empty string ("") to ignore.
+        OOB (int): Out-of-business status. 1 = True, 0 = False, -1 = ignore.
+        Funded (int): Funding status. 1 = funded, 0 = not funded, -1 = ignore.
 
     Returns:
-        list[list[str]]: A list containing the data for each requested attribute
+        list[dict]: A list of dictionaries, each representing a company that matches all given filters.
     """
     import pandas as pd
 

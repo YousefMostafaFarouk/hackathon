@@ -26,7 +26,7 @@ client = genai.Client(api_key="AIzaSyB57DPx67DwuoetWePSm7eabr5Rw7U-RPE")
 # Example query: make sure your SQL query is valid. Here, we assume the 'df' table contains
 # a column that might refer to the city or location to filter startups in Zurich.
 user_prompt = input("Put in youre question: ")
-with open("prompt.txt", "r", encoding="utf-8") as file:
+with open("system_prompt.txt", "r", encoding="utf-8") as file:
     system_prompt = file.read()
 response = client.models.generate_content(
     model="gemini-1.5-pro",

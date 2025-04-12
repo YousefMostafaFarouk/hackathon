@@ -1,35 +1,27 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
 <head>
-  <title>Total Number of Companies</title>
-  <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+<script>
+window.onload = function () {
+
+var chart = new CanvasJS.Chart("chartContainer", {
+	title: {
+		text: "Biotech Companies Founded in 2025"
+	},
+	data: [{
+		type: "column",
+		dataPoints: [
+			{ label: "Biotech",  y: 1  }
+		]
+	}]
+});
+chart.render();
+
+}
+</script>
 </head>
 <body>
-
-  <h1>Total Number of Companies: 5215</h1>
-
-  <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-  <script>
-  window.onload = function () {
-
-  var chart = new CanvasJS.Chart("chartContainer", {
-    animationEnabled: true,
-    title: {
-      text: "Total Number of Companies"
-    },
-    data: [{
-      type: "pie",
-      startAngle: 240,
-      yValueFormatString: "##0\",
-      indexLabel: "{label} {y}",
-      dataPoints: [
-        {y: 5215, label: "Companies"}
-      ]
-    }]
-  });
-  chart.render();
-
-  }
-  </script>
+<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+<script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 </body>
 </html>

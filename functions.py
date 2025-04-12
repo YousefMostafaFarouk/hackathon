@@ -60,6 +60,20 @@ city_map = {
     "Zurich": "Zürich"
 }
 
+def get_company_df():
+    # read the data
+    df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Companies")
+
+    #handeling problematic data
+    df['Canton'] = df['Canton'].map(canton_map)
+    df["Industry"] = df["Industry"].map(industry_map)
+    df["Spin-offs"] = df['Spin-offs'].apply(lambda x: x.split(",") if isinstance(x, str) else [])
+    df["City"] = df["City"].str.replace(r"\s*\([^)]*\)", "", regex=True)
+    df["City"] = df["City"].apply(lambda s: s.split("/")[0].strip() if isinstance(s, str) else s)
+    df["City"] = df["City"].apply(lambda x: city_map.get(x, x) if isinstance(x, str) else x)  #
+
+    return df
+
 def get_data_by_attribute_function(Code : str,
                                    Title : str,
                                    Industry : str,
@@ -93,13 +107,7 @@ def get_data_by_attribute_function(Code : str,
     # read the data
     df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Companies")
 
-    #handeling problematic data
-    df['Canton'] = df['Canton'].map(canton_map)
-    df["Industry"] = df["Industry"].map(industry_map)
-    df["Spin-offs"] = df['Spin-offs'].apply(lambda x: x.split(",") if isinstance(x, str) else [])
-    df["City"] = df["City"].str.replace(r"\s*\([^)]*\)", "", regex=True)
-    df["City"] = df["City"].apply(lambda s: s.split("/")[0].strip() if isinstance(s, str) else s)
-    df["City"] = df["City"].apply(lambda x: city_map.get(x, x) if isinstance(x, str) else x)    
+    df = get_company_df
     
     # get the data by the attribute
     features = {
@@ -122,3 +130,25 @@ def get_data_by_attribute_function(Code : str,
         df = df[df["Spin-offs"].apply(lambda lst: isinstance(lst, list) and Spin_offs in lst)]
     df = df[(df[list(features.index)] == features).all(axis=1)].fillna("null")
     return df.to_dict(orient="records")
+
+
+def early_stage_investment_volume(Industry) -> float:
+    """
+    This function is used to get the early stage investment volume by industry
+    Args:
+        Industry (str): The industry to get the investment volume from
+    Returns:
+        float: The investment volume
+    """
+    import numpy as np
+    df_deal = pd.read_excel("Data-startupticker.xlsx", sheet_name="Deals")
+    df_comp = get_company_df()
+    df_comp_subset = df_comp[['Title', 'Industry', 'Vertical', 'City']].copy()
+    df_deal = df_deal.merge(df_comp_subset, left_on='Company', right_on='Title', how='left')
+
+    if Industry != "":
+        df_deal = df_deal[df_deal["Industry"] == Industry]
+    df_deal = df_deal[(df_deal['Phase'] == 'Early Stage') | (df_deal['Phase'] == 'Seed')]
+    return np.sum(df_deal['Amount'])
+early_stage_investment_volume()
+

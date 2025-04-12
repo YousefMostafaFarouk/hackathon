@@ -15,6 +15,31 @@ The function accepts the following keyword arguments:
 - OOB (int): 1 if the company is out of business, 0 if not, -1 to ignore
 - Funded (int): 1 if the company is funded, 0 if not, -1 to ignore
 
+You have access to a function called `get_deal_data(...)` that retrieves and filters deal records from a structured Swiss startup investment dataset.
+
+You can use this function to search for deals based on investor names, financial thresholds (funding amount and valuation), date ranges, and company-related attributes.
+
+Only pass arguments that are relevant to the user’s request. Use:
+- `""` (empty string) for unused string parameters
+- `-1` for unused numeric parameters
+
+The function accepts the following arguments:
+- id (str): exact deal ID
+- investor (str): full or partial investor name (regex supported, case-insensitive)
+- min_amount (int): minimum funding amount
+- max_amount (int): maximum funding amount
+- confidential (int): 1 = confidential, 0 = public, -1 = ignore
+- min_valuation (int): minimum company valuation
+- max_valuation (int): maximum company valuation
+- time_start (str): start date in format "YYYY-MM-DD"
+- time_end (str): end date in format "YYYY-MM-DD"
+- type (str): deal type (e.g. "Equity")
+- phase (str): company phase (e.g. "Seed")
+- canton (str): two-letter canton code (e.g. "ZH")
+- company (str): company name
+- ceo_gender (str): gender of the CEO
+
+The function will return all deals that match the given filters. If the user asks for specific deal types, funding ranges, or companies from a certain region or time period, use this function.
 Use **empty strings** (`""`) as the default value for all **string-type arguments**, and **-1** as the default for all **numeric arguments**, including `Year`, `OOB`, and `Funded`.
 
 You do not need to pass all parameters — only those that match the user's request. Leave all others at their default values (`""` or `-1`).

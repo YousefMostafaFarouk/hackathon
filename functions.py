@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 #maps to clean the data
 canton_map = {
@@ -60,9 +61,14 @@ city_map = {
     "Zurich": "Zürich"
 }
 
+# Get data file path
+def get_data_path(filename):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(script_dir, filename)
+
 def get_company_df():
     # read the data
-    df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Companies")
+    df = pd.read_excel(get_data_path("Data-startupticker.xlsx"), sheet_name="Companies")
 
     #handeling problematic data
     df['Canton'] = df['Canton'].map(canton_map)
@@ -105,7 +111,7 @@ def get_data_by_attribute_function(Code : str,
     import pandas as pd
 
     # read the data
-    df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Companies")
+    df = pd.read_excel(get_data_path("Data-startupticker.xlsx"), sheet_name="Companies")
 
     df = get_company_df()
     
@@ -141,7 +147,7 @@ def early_stage_investment_volume(Industry : str) -> float:
         float: The investment volume
     """
     import numpy as np
-    df_deal = pd.read_excel("Data-startupticker.xlsx", sheet_name="Deals")
+    df_deal = pd.read_excel(get_data_path("Data-startupticker.xlsx"), sheet_name="Deals")
     df_comp = get_company_df()
     df_comp_subset = df_comp[['Title', 'Industry', 'Vertical', 'City']].copy()
     df_deal = df_deal.merge(df_comp_subset, left_on='Company', right_on='Title', how='left')
@@ -192,7 +198,7 @@ def get_deal_data(id: str,
     Returns:
         pd.DataFrame: A filtered DataFrame containing all deals that match the given criteria.
     """
-    df_deal = pd.read_excel("Data-startupticker.xlsx", sheet_name="Deals")
+    df_deal = pd.read_excel(get_data_path("Data-startupticker.xlsx"), sheet_name="Deals")
     df_comp = get_company_df()
     df_comp_subset = df_comp[['Title', 'Industry', 'City']].copy()
     df_deal = df_deal.merge(df_comp_subset, left_on='Company', right_on='Title', how='left')

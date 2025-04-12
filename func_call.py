@@ -21,7 +21,30 @@ def get_column_name_function(csv_file : str) -> list[str]:
     column_names = df.columns
     return column_names.tolist()
 
-def get_data_by_attribute_function(csv_file : str, attributes : list[str]) -> list[str]:
+#Code 
+#Title
+#Industry
+#Vertical
+#Canton
+#Spin-offs
+#City
+#Year
+#Highlights
+#Gender CEO
+#OOB
+#Funded
+#Comment
+
+def get_data_by_attribute_function(Code : str,
+                                   Title : str,
+                                   Industry : str,
+                                   Canton : str,
+                                   Spin_offs : str,
+                                   City : str,
+                                   Year : int,
+                                   CEO_Gender : str,
+                                   OOB : bool,
+                                   Funded : bool) -> list[str]:
     """
     This function is used to get the data from the csv file by the attribute
 
@@ -32,14 +55,31 @@ def get_data_by_attribute_function(csv_file : str, attributes : list[str]) -> li
     Returns:
         list[list[str]]: A list containing the data for each requested attribute
     """
-    # read the csv file
-    df = pd.read_csv(csv_file)
-    # get the data by the attributes
-    result = []
-    for attribute in attributes:
-        data = df[attribute].tolist()
-        result.append(data)
-    return result
+    import pandas as pd
+
+    # read the data
+    df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Companies")
+    
+    # get the data by the attribute
+    features = {
+        "Industry": Industry,
+        "Canton": Canton,
+        "Spin-offs": Spin_offs,
+        "Code": Code,
+        "Title": Title,
+        "City": City,
+        "Year": Year,
+        "Gender CEO": CEO_Gender,
+        "OOB": OOB,
+        "Funded": Funded,
+    }
+
+    features = pd.Series(features)
+    features = features[features != ""]
+    
+    mask = (df[list(features.index)] == features).all(axis=1)
+    return df[mask]
+    
 
 config = genai.types.GenerateContentConfig(tools=[get_column_name_function, get_data_by_attribute_function])
 

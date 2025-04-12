@@ -2,7 +2,6 @@ import pandas as pd
 from pandasql import sqldf
 from google import genai
 import os
-import httpx
 
 def write_to_html(text: str):
     """
@@ -55,7 +54,7 @@ def query_csv_with_pandasql(csv_file: str, sql_query: str) -> dict:
     
     # Execute the SQL query
     result_df = pysqldf(sql_query)
-    
+    print(sql_query)
     # Convert the result DataFrame into a list of dictionaries
     results = result_df.to_dict(orient='records')
     
@@ -66,8 +65,45 @@ def query_csv_with_pandasql(csv_file: str, sql_query: str) -> dict:
 
 # Configuration for the client; your functions are provided as tools.
 config = {
-    "tools": [get_column_name_function, query_csv_with_pandasql, write_to_html],
-    "system_instruction": " using csv file name = 'Data-startupticker.csv' the name of the table is df, Present your answers in an html file called output.html and use canvasjs to make charts that supports your answer if possible  "
+    "tools": [get_column_name_function, query_csv_with_pandasql, write_to_html ],
+    "system_instruction": """ using csv file name = 'Data-startupticker.csv' the name of the table is df, Present your answers in an html file called output.html and use canvasjs to make charts that supports your answer if possible 
+    make sure to use get_column_name_function first to know the column names 
+    this is also the schema of the csv file:
+    const company: {
+  code: string;              // char (unique)
+  title: string;             // char (unique)
+  industry: string;          // char (classification)
+  vertical: string;          // char (classification)
+  canton: string;            // char (classification)
+  spinOffs: string[];        // list
+  city: string;              // char
+  year: number;              // int
+  highlights: string[];      // list
+  genderCEO: string;         // char (classification)
+  oob: boolean;              // bool
+  funded: boolean;           // bool
+  comment: string;           // char
+};
+
+// Deal object with type annotations
+const deal: {
+  id: string;                // char (unique generated)
+  investors: string;         // char
+  amount: number;            // numeric
+  valuation: number;         // numeric
+  comment: string;           // char
+  url: string;               // char
+  confidential: boolean;     // bool
+  amountConfidential: boolean; // bool
+  dateOfFundingRound: Date;  // date
+  type: string;              // char (classification)
+  phase: string;             // char (classification)
+  canton: string;            // char (classification)
+  company: string;           // char (reference to Company.code)
+  genderCEO: string;         // char (classification)
+  };
+    """
+  #You also don't have to only stick to the provided functions you can also execute your own code
 }
 
 client = genai.Client(api_key="AIzaSyB57DPx67DwuoetWePSm7eabr5Rw7U-RPE")
@@ -80,6 +116,6 @@ response = client.models.generate_content(
     contents= "make sure to use get_column_name_function first to know the column names "+prompt,
     config=config
 )
-#print(response)
+print(response)
 print(response.text)
 #print(response.function_response.response) #what are other thing I can use for the response other than text? 

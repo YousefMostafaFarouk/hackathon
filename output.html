@@ -1,35 +1,35 @@
-
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <head>
-<script>
-window.onload = function () {
-
-var chart = new CanvasJS.Chart("chartContainer", {
-	animationEnabled: true,
-	title:{
-		text: "Early Stage Investments by Industry"
-	},
-	axisY: {
-		title: "Number of Investments",
-		includeZero: true
-	},
-	axisX: {
-		title: "Industry"
-	},
-	data: [{
-		type: "column",
-		yValueFormatString: "#,##0.# Investments",
-		dataPoints: []
-	}]
-});
-chart.render();
-
-}
-</script>
+  <title>Total Number of Companies</title>
+  <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
 </head>
 <body>
-<div id="chartContainer" style="height: 370px; width: 100%;"></div>
-<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+  <h1>Total Number of Companies: 5215</h1>
+
+  <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+  <script>
+  window.onload = function () {
+
+  var chart = new CanvasJS.Chart("chartContainer", {
+    animationEnabled: true,
+    title: {
+      text: "Total Number of Companies"
+    },
+    data: [{
+      type: "pie",
+      startAngle: 240,
+      yValueFormatString: "##0\",
+      indexLabel: "{label} {y}",
+      dataPoints: [
+        {y: 5215, label: "Companies"}
+      ]
+    }]
+  });
+  chart.render();
+
+  }
+  </script>
 </body>
 </html>

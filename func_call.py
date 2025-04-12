@@ -4,17 +4,7 @@ from google import genai
 import os
 import httpx
 
-get_column_name = {
-    "name": "get_column_name_function",
-    "description": "Get the column name from the csv file",
-    "parameters": {
-        "type": "OBJECT",
-        "properties": {
-            "csv_file": {"type": "string", "description": "The csv file to get the column name from"}
-        },
-        "required": ["csv_file"]
-    }
-}
+
 def get_column_name_function(csv_file : str) -> list[str]:
     """
     This function is used to get the column name from the csv file
@@ -31,9 +21,27 @@ def get_column_name_function(csv_file : str) -> list[str]:
     column_names = df.columns
     return column_names.tolist()
 
+def get_data_by_attribute_function(csv_file : str, attributes : list[str]) -> list[str]:
+    """
+    This function is used to get the data from the csv file by the attribute
 
+    Args:
+        csv_file (str): The csv file to get the data from
+        attribute (list[str]): The attribute to get the data from
 
-config = genai.types.GenerateContentConfig(tools=[get_column_name_function])
+    Returns:
+        list[list[str]]: A list containing the data for each requested attribute
+    """
+    # read the csv file
+    df = pd.read_csv(csv_file)
+    # get the data by the attributes
+    result = []
+    for attribute in attributes:
+        data = df[attribute].tolist()
+        result.append(data)
+    return result
+
+config = genai.types.GenerateContentConfig(tools=[get_column_name_function, get_data_by_attribute_function])
 
 client = genai.Client(api_key=("AIzaSyB57DPx67DwuoetWePSm7eabr5Rw7U-RPE"))
 

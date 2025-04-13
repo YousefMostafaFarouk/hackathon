@@ -53,14 +53,19 @@ app.post('/api/search', (req, res) => {
     }
     
     // Check if output.html exists and return its contents if it does
-    const htmlPath = path.resolve(__dirname, '..', 'output.html');
+    const htmlPath = path.resolve(__dirname, 'output.html');
+    console.log('Looking for output.html at:', htmlPath);
+    
     if (fs.existsSync(htmlPath)) {
+      console.log('Found output.html - sending HTML content to frontend');
       try {
         const htmlContent = fs.readFileSync(htmlPath, 'utf8');
         return res.json({ response: htmlContent });
       } catch (err) {
         console.error('Error reading output.html:', err);
       }
+    } else {
+      console.log('output.html not found at expected path:', htmlPath);
     }
     
     // Otherwise return the stdout output

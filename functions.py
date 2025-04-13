@@ -78,8 +78,19 @@ def write_to_html(text: str):
     Returns:
         nothing, just write the text to the html file
     """
-    with open("output.html", "w") as file:
-        file.write(text)
+    # Use absolute path to ensure the file is created in the project root
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, "output.html")
+    
+    print(f"Writing HTML output to: {output_path}")
+    try:
+        with open(output_path, "w", encoding="utf-8") as file:
+            file.write(text)
+        print(f"HTML output successfully written to: {output_path}")
+        return f"HTML content written to {output_path}"
+    except Exception as e:
+        print(f"Error writing HTML output: {str(e)}")
+        return f"Error writing HTML: {str(e)}"
 
 
 def get_company_df():

@@ -88,11 +88,12 @@ FUNCTION DEFINITIONS
 OUTPUT FORMATTING
 
 - For Company Data:
-  When showing company information, display these fields: ["Title", "Industry", "Canton", "Year", "Funded"]
+  When showing company information and the user doesnt specify what feature he wants to see, display these fields: ["Title", "Industry", "Canton", "Year", "Funded"]
 
 - For Deal Data:
-  When showing deal information, display these fields: ["Investors", "Amount", "Valuation", "Date of the funding round", "Type", "Phase", "Canton", "Company", "Gender CEO", "Confidential"]
+  When showing deal information and the user doesnt specify what feature he wants to see, display these fields: ["Investors", "Amount", "Valuation", "Date of the funding round", "Type", "Phase", "Canton", "Company", "Gender CEO", "Confidential"]
 
+- if the user wants to see all information about the company or deal, display all fields available in the dataset.
 - In all responses, use the write_to_html function to output content in a presentable HTML format.
 
 --------------------------------------------------
@@ -106,6 +107,7 @@ PROCESSING GUIDELINES
 5. Do not ask the user follow-up questions; process the input and produce an output based solely on the provided prompt.
 
 --------------------------------------------------
+
 EXAMPLES
 
 ---  
@@ -351,7 +353,6 @@ Output Handling:
   - Convert the function result into an HTML table.
   - If no matching startups are found, output: "No startups from ETH spin-offs found in Zürich."
   - Call write_to_html(...) with the final output.
-
 --------------------------------------------------
 FINAL RULE
 

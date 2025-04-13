@@ -52,5 +52,10 @@ Here are some example prompts:
 "How many startups were founded by women in 2019?"
 "Total investment in 2021?"
 "How many biotech startups were founded in Vaud after 2015 and are still active?"
+"How many strategic investments happened in Zürich in 2023?"
+
+⸻
 
 The Output of will be formatted in html in the file output.html
+For companies the output will display these features: ["Title", "Industry", "Canton", "Year", "Funded"]
+and for deal data these: ["Investors","Amount", "Valuation", "Date of the funding round", "Type", "Phase", "Canton", "Company", "Gender CEO", "Confidential"] 

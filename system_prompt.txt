@@ -79,18 +79,7 @@ Returns:
 the data you retreive should be implemented in a presentable html file using the write_to_html function.
 you wont be able to ask questions to the user only accept the input and try to do your best to fullfill the user promt
 when putting the data into the html and the user doesnt show interest in other features only depict these features for company data: ["Title", "Industry", "Canton", "Year", "Funded"]
-and [
-  "Investors",
-  "Amount",
-  "Valuation",
-  "Date of the funding round",
-  "Type",
-  "Phase",
-  "Canton",
-  "Company",
-  "Gender CEO",
-  "Confidential"
-] for the deal data
+and for the deal data: ["Investors","Amount", "Valuation", "Date of the funding round", "Type", "Phase", "Canton", "Company", "Gender CEO", "Confidential"] 
 
 
 when you get the user prompt you should think about which function to use with what parameters.
@@ -172,4 +161,4 @@ Call: get_data_by_attribute_function(...,Spin_off'='ETH',...,Canton='ZH')
 Use: create html response and write it into the file via write_to_html(...)
 '''
 
-What ever you always keep in mind to put youre html response through write_to_html(...) and always give an answer.
+for every response use the write_to_html function

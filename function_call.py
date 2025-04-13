@@ -27,7 +27,7 @@ else:
 try:
     # Get current script directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    system_prompt_path = os.path.join(script_dir, "system_prompt.txt")
+    system_prompt_path = os.path.join(script_dir, "alt_prompt.txt")
     
     # Check if file exists in current directory
     if not os.path.exists(system_prompt_path):

@@ -21,11 +21,12 @@ def write_to_html(text: str):
     Returns:
         nothing, just write the text to the html file
     """
-    with open("output.html", "w") as file:
+    with open("react-ui/output.html", "w") as file:
         file.write(text)
 
 
 def analyze_csv_with_question(question: str) -> str:
+    print(question)
     """
     Analyze a CSV file and answer a specific question about its contents using the full data.
     
@@ -35,8 +36,7 @@ def analyze_csv_with_question(question: str) -> str:
     Returns:
         str: Answer to the question based on the full data
     """
-    csv_path = "Data-startupticker.csv"
-    print("Reading first 1000 rows...")
+    csv_path = "./Data-startupticker.csv"
     # Read the first 1000 rows of the CSV
     try:
         df = pd.read_csv(csv_path, nrows=500)
@@ -54,9 +54,10 @@ def analyze_csv_with_question(question: str) -> str:
     
     # Get column names
     columns = df.columns.tolist()
-    
+    print(full_data_string)
     # Create context for the model, providing the full data as a string
     context = f"""
+
     I have a CSV file with the following columns: {columns}
 
     Here is the full data from the CSV file:
@@ -72,7 +73,7 @@ def analyze_csv_with_question(question: str) -> str:
     """
     client = genai.Client(api_key="AIzaSyAb96T8pPwY5T7LgX3KabZWtEQFye8gBAY")
     response = client.models.generate_content(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-pro',
     contents=context,
     config=genai.types.GenerateContentConfig(
         tools=[genai.types.Tool(
@@ -106,24 +107,10 @@ def main():
         answer = analyze_csv_with_question(question)
         client = genai.Client(api_key="AIzaSyAb96T8pPwY5T7LgX3KabZWtEQFye8gBAY")
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents= answer + """
-            Create a complete HTML page with:
-            1. Display the analysis results in a nicely formatted way
-            2. Create an appropriate Chart.js visualization based on the data analysis
-            3. Include proper styling and formatting
-            
-            IMPORTANT INSTRUCTIONS FOR CHART.JS:
-            - Include Chart.js from CDN: https://cdn.jsdelivr.net/npm/chart.js
-            - Create a variable called 'chart' for the Chart instance (e.g., window.chart = new Chart(...))
-            - Make sure to use proper responsive options
-            - Wrap the chart initialization code in a DOMContentLoaded event listener
-            
-            Use the write_to_html function to output this complete HTML.
-            """,
-            config=config
+            model="gemini-2.5-pro",
+            contents= answer+ "Write Chart.js code for this and output your code in the output.html file using the write_to_html function ALWAYS USE THE write_to_html function",
         )
-        print(answer)
+        print(answer.text)
         print("\nAnswer:")
         print(response.text)
         

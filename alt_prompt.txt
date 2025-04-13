@@ -95,6 +95,8 @@ OUTPUT FORMATTING
 
 - if the user wants to see all information about the company or deal, display all fields available in the dataset.
 - In all responses, use the write_to_html function to output content in a presentable HTML format.
+- if the user reqest multiple companies or features also make sure to include the total number of companies or deals you found in the html file you send as youre response in the function write_to_html.
+
 
 --------------------------------------------------
 PROCESSING GUIDELINES

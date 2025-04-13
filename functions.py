@@ -137,14 +137,9 @@ def get_data_by_attribute_function(Code : str,
     Returns:
         dict: A dict, representing the companies that matche all given filters.
     """
-    import pandas as pd
-
-    # read the data
-
-
+    # Read the data
     df = get_company_df()
-    
-    # get the data by the attribute
+
     features = {
         "Code": Code,
         "Title": Title,
@@ -160,14 +155,18 @@ def get_data_by_attribute_function(Code : str,
     features = features[features != ""]
     features = features[features != -1]
 
-    # filter the data by the attributes
     if Spin_offs != "":
         df = df[df["Spin-offs"].apply(lambda lst: isinstance(lst, list) and Spin_offs in lst)]
 
-    df = df[(df[list(features.index)] == features).all(axis=1)].fillna(-1).sort_values(by=sort_by, ascending=False)
-    return df.head(20).to_dict(orient="records")
+    df = df[(df[list(features.index)] == features).all(axis=1)].fillna('')
 
+    if sort_by and sort_by in df.columns:
+        df[sort_by] = pd.to_numeric(df[sort_by], errors="coerce")
+        df = df.sort_values(by=sort_by, ascending=False).fillna('')
 
+    if not df.empty:
+        df['count'] = df.shape[0]
+    return df.head(20).fillna('').to_dict(orient="records")
 
 def get_deal_data_by_attribute(id: str,
                   investor: str,
@@ -228,7 +227,7 @@ def get_deal_data_by_attribute(id: str,
         df_deal = df_deal[mask]
     
     #filter for discret features
-    features = {'Id': id, 'Investor': investor,  'Confidential': confidential,   'Type': type, 'Phase': phase, 'Canton': canton, 'Company': company, 'Gender CEO': ceo_gender, 'Industry': industry, 'City': City}
+    features = {'Id': id, 'Investors': investor,  'Confidential': confidential,   'Type': type, 'Phase': phase, 'Canton': canton, 'Company': company, 'Gender CEO': ceo_gender, 'Industry': industry, 'City': City}
     features = pd.Series(features)
     features = features[features != ""]
     features = features[features != -1]
@@ -248,9 +247,23 @@ def get_deal_data_by_attribute(id: str,
         df_deal = df_deal[pd.to_datetime(df_deal['Date of the funding round']) >= pd.to_datetime(time_start)]
     if time_end != "":
         df_deal = df_deal[pd.to_datetime(df_deal['Date of the funding round']) <= pd.to_datetime(time_end)]
-    df_deal = df_deal.fillna(-1).sort_values(by=sort_by, ascending=False)
-    return df_deal.head(20).to_dict(orient="records")
 
+    if not df_deal.empty:
+        #count the number of deals
+        df_deal['count'] = int(df_deal.shape[0])
+        #calculate the total and mean of the amount
+        df_deal['Amount'] = pd.to_numeric(df_deal['Amount'], errors='coerce')
+        df_deal['amount_tot'] = float(df_deal['Amount'].sum())
+        df_deal['amount_mean'] = float(df_deal['Amount'].mean())
+        #calculate the total and mean of the valuation
+        df_deal['Valuation'] = pd.to_numeric(df_deal['Valuation'], errors='coerce')
+        df_deal['valuation_tot'] = float(df_deal['Valuation'].sum())
+        df_deal['valuation_mean'] = float(df_deal['Valuation'].mean())
+
+    if sort_by in df_deal.columns and sort_by != "":
+        df_deal[sort_by] = pd.to_numeric(df_deal[sort_by], errors="coerce")
+        df_deal = df_deal.dropna(subset=[sort_by]).sort_values(by=sort_by, ascending=False)
+    return df_deal.head(20).fillna('').to_dict(orient="records")
 
 def early_stage_investment_volume(Industry : str) -> float:
     """
@@ -269,97 +282,7 @@ def early_stage_investment_volume(Industry : str) -> float:
     if Industry != "":
         df_deal = df_deal[df_deal["Industry"] == Industry]
     df_deal = df_deal[(df_deal['Phase'] == 'Early Stage') | (df_deal['Phase'] == 'Seed')]
-    return np.sum(df_deal['Amount'])
+    return float(np.sum(df_deal['Amount']))
 
-
-def custom_sum(data: str, feature: str) -> float:
-    """
-    Calculates the sum of a specific numerical column from JSON-formatted data.
-
-    Args:
-        data (str): A JSON string representing a list of records (e.g., '[{"amount": 10}, {"amount": 20}]').
-        feature (str): The key/column name whose values should be summed.
-
-    Returns:
-        float: The total sum of all values under the specified feature.
-    """
-    df = pd.read_json(data).astype(float)
-    df = df[df != -1].astype(float)
-    if len(df.columns) == 1:
-        return float(df.sum())
-    return df[feature].astype(float).sum()
-
-def custom_mean(data: str, feature: str) -> float:
-    """
-    Calculates the mean (average) of a specific numerical column from JSON-formatted data.
-
-    Args:
-        data (str): A JSON string representing a list of records (e.g., '[{"amount": 10}, {"amount": 20}]').
-        feature (str): The key/column name whose values should be averaged.
-
-    Returns:
-        float: The mean of all values under the specified feature.
-    """
-    df = pd.read_json(data).astype(float)
-    df = df[df != -1].astype(float)
-    if len(df.columns) == 1:
-        return float(df.mean())
-    return float(df[feature].mean())
-
-def custom_count(data: str, feature: str) -> int:
-    """
-    Counts the number of non-missing entries in a specific column from JSON-formatted data.
-
-    Args:
-        data (str): A JSON string representing a list of records (e.g., '[{"amount": 10}, {"amount": 20}]').
-        feature (str): The key/column name whose non-missing values should be counted.
-
-    Returns:
-        int: The number of valid entries in the specified feature column.
-    """
-    df = pd.read_json(data).astype(float)
-    df = df[df != -1]
-    if len(df.columns) == 1:
-        return int(df.count())
-    return int(df[feature].count())
-
-
-def get_company_feature(feature: str) -> str:
-    """
-    Retrieves a specific feature (column) from the company dataset.
-
-    Args:
-        feature (str): The name of the feature/column to retrieve.
-
-    Returns:
-        str: A json string containing the values of the specified feature.
-    """
-    df = get_company_df()
-    return df[feature].astype(str).fillna(-1).replace("", -1).to_json(orient="records")
-
-def get_deal_feature(feature: str) -> pd.DataFrame:
-    """
-    Retrieves a specific feature (column) from the deal dataset.
-
-    Args:
-        feature (str): The name of the feature/column to retrieve.
-
-    Returns:
-        pd.Dataframe: A dataframe containing the values of the specified feature.
-    """
-    df = pd.read_excel("Data-startupticker.xlsx", sheet_name="Deals")
-    return df[feature].astype(str).fillna(-1).replace("", -1).to_json(orient="records")
-
-test = get_data_by_attribute_function(
-    Code="",
-    Title="",
-    Industry="Biotech",
-    Canton="ZH",
-    Spin_offs="ETH",
-    City="Zürich",
-    Year=-1,
-    CEO_Gender="",
-    OOB=-1,
-    sort_by="Year",
-    Funded=1
-)
+#print(get_deal_data_by_attribute(id="", investor="", min_amount=-1, max_amount=-1, confidential=-1, min_valuation=-1, max_valuation=-1, time_start="", time_end="", type="", phase="", canton="BE", company="", ceo_gender="", industry="", City="", sort_by="Valuation")
+#)

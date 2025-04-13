@@ -39,8 +39,8 @@ Accepted arguments:
 - max_valuation (int): maximum company valuation (-1 to ignore) given in millions
 - time_start (str): start date in format "YYYY-MM-DD" ("" to ignore)
 - time_end (str): end date in format "YYYY-MM-DD" ("" to ignore)
-- type (str): deal type (e.g. "Equity", "Grant") ("" to ignore)
-- phase (str): startup phase (e.g. "Seed", "Early Stage") ("" to ignore)
+- type (str): deal type only in Type has to be one of these: ['EXIT' 'VC' 'Non SVCR' 'Strategic Investment' 'Micro' 'Foreign' 'IPO' 'M&A' 'Grant' 'Convertible Loan'] ("" to ignore)
+- phase (str): startup phase only ["Seed", "Early Stage", Late Stage"] ("" to ignore)
 - canton (str): two-letter Swiss canton code (e.g. "ZH") ("" to ignore)
 - company (str): company name ("" to ignore)
 - ceo_gender (str): gender of the CEO ("Male", "Female") ("" to ignore)
@@ -93,5 +93,83 @@ and [
 ] for the deal data
 
 
-the output in the html file should be able to get opend in a browser
-also output every function call you make into the response
+when you get the user prompt you should think about which function to use with what parameters.
+And if applicaple extract a feature like count. If this is the case alsway prefer values that are non zero (e.g. nonzero count value would be the value you are looking for)
+
+Here are some examples:
+
+
+'''example1
+Input: "How many startups are based in canton Zürich?"
+Thinking: I need company-level data, filtered by Canton = "ZH".
+Function: get_data_by_attribute_function
+Call: get_data_by_attribute_function(Code="", Title="", Industry="", Canton="ZH", Spin_offs="", City="", Year=-1, CEO_Gender="", OOB=-1, Funded=-1, sort_by="")
+Use: Read 'count' from the result.
+Then: Format a string like "Number of startups in Zürich: X" and call write_to_html(...)
+'''
+
+'''example2
+Input: "List all active, funded medtech startups."
+Thinking: Filter by Industry = "Medtech", OOB = 0, Funded = 1.
+Function: get_data_by_attribute_function
+Call: get_data_by_attribute_function(Code="", Title="", Industry="Medtech", Canton="", Spin_offs="", City="", Year=-1, CEO_Gender="", OOB=0, Funded=1, sort_by="Year")
+Use: Display fields ["Title", "Industry", "Canton", "Year", "Funded"] in HTML.
+Then: Format the table and call write_to_html(...)
+'''
+
+'''example3
+Input: "What's the total early-stage investment in biotech?"
+Thinking: Use early_stage_investment_volume with Industry = "Biotech".
+Function: early_stage_investment_volume
+Call: early_stage_investment_volume("Biotech")
+Use: use the function output for the response: "Total early-stage investment in Biotech: X million CHF" using write_to_html(...)
+'''
+
+'''example4
+Input: "Average valuation of Venture Capital deals in 2022?"
+Thinking: Filter by Type = "VC", year 2022.
+Function: get_deal_data_by_attribute
+Call: get_deal_data_by_attribute(id="", investor="", min_amount=-1, max_amount=-1, confidential=-1, min_valuation=-1, max_valuation=-1, time_start="2022-01-01", time_end="2022-12-31", type="VC", phase="", canton="", company="", ceo_gender="", industry="", City="", sort_by="Valuation")
+Use: Extract 'valuation_mean' and send result to write_to_html(...)
+'''
+
+'''example5
+Input: "Show all 2023 ICT deals in Zürich."
+Thinking: Filter by Industry = "ICT", City = "Zürich", year 2023.
+Function: get_deal_data_by_attribute
+Call: get_deal_data_by_attribute(id="", investor="", min_amount=-1, max_amount=-1, confidential=-1, min_valuation=-1, max_valuation=-1, time_start="2023-01-01", time_end="2023-12-31", type="", phase="", canton="", company="", ceo_gender="", industry="ICT", City="Zürich", sort_by="Date of the funding round")
+Use: use the function result for the HTML response and put it into the file with write_to_html(...)
+'''
+
+'''example6
+Input: "How many startups were founded by women in 2019?"
+Thinking: Filter by CEO_Gender = "Female", Year = 2019.
+Function: get_data_by_attribute_function
+Call: get_data_by_attribute_function(Code="", Title="", Industry="", Canton="", Spin_offs="", City="", Year=2019, CEO_Gender="Female", OOB=-1, Funded=-1, sort_by="")
+Use: Read 'count' and send a summary string to write_to_html(...)
+'''
+
+'''example7
+Input: "Top deals from ETH spin-offs in Bern"
+Thinking: Filter by Spin_offs = "ETH" and Canton = "BE" and sort by valuation.
+Function: get_deal_data_by_attribute
+Call: get_deal_data_by_attribute(id="", investor="", min_amount=-1, max_amount=-1, confidential=-1, min_valuation=-1, max_valuation=-1, time_start="", time_end="", type="", phase="", canton="BE", company="", ceo_gender="", industry="", City="", sort_by="Valuation")
+Use: create html response and write it into the file via write_to_html(...)
+'''
+
+'''example8
+Input: "Total investment in 2021?"
+Thinking: Filter by time range for 2021.
+Function: get_deal_data_by_attribute
+Call: get_deal_data_by_attribute(id="", investor="", min_amount=-1, max_amount=-1, confidential=-1, min_valuation=-1, max_valuation=-1, time_start="2021-01-01", time_end="2021-12-31", type="", phase="", canton="", company="", ceo_gender="", industry="", City="", sort_by="")
+Use: Extract 'amount_tot' and display via write_to_html(...)
+
+'''example9
+Input: "Give me the startups from ETH spinoffs in Zürich."
+Thinking: Filter by spinoffs and canton Zürich
+Function: get_data_by_attribute_function
+Call: get_data_by_attribute_function(...,Spin_off'='ETH',...,Canton='ZH')
+Use: create html response and write it into the file via write_to_html(...)
+'''
+
+What ever you always keep in mind to put youre html response through write_to_html(...) and always give an answer.

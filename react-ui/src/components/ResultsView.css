@@ -4,6 +4,7 @@
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  overflow-x: hidden; /* Prevent horizontal overflow */
 }
 
 .results-title {
@@ -15,6 +16,25 @@
 
 .results-content {
   margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent horizontal overflow */
+}
+
+/* Styles for HTML injected content */
+.results-content div {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure iframes, images, and other media are responsive */
+.results-content iframe,
+.results-content img,
+.results-content canvas,
+.results-content svg {
+  max-width: 100% !important;
+  height: auto !important;
 }
 
 .text-container {
@@ -26,6 +46,8 @@
 
 .data-table-container {
   margin-top: 2rem;
+  width: 100%;
+  overflow-x: auto; /* Allow horizontal scrolling for tables */
 }
 
 .data-table-container h4 {
@@ -38,18 +60,23 @@
 .results-content h2, 
 .results-content h3 {
   color: #2c3e50;
+  word-wrap: break-word; /* Break long words */
 }
 
 .results-content table {
   width: 100%;
   margin-bottom: 1rem;
   border-collapse: collapse;
+  display: block;
+  overflow-x: auto; /* Allow tables to scroll horizontally */
+  max-width: 100%;
 }
 
 .results-content table th,
 .results-content table td {
   padding: 0.5rem;
   border: 1px solid #dee2e6;
+  word-break: break-word; /* Break long words in table cells */
 }
 
 .results-content table thead th {
@@ -60,8 +87,62 @@
 .results-content a {
   color: #0d6efd;
   text-decoration: none;
+  word-break: break-all; /* Break long URLs */
 }
 
 .results-content a:hover {
   text-decoration: underline;
+}
+
+/* Add styling for code blocks */
+.results-content pre,
+.results-content code {
+  white-space: pre-wrap; /* Preserve whitespace but wrap */
+  word-wrap: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+  background-color: #f5f5f5;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .results-container {
+    padding: 1rem;
+  }
+  
+  .results-content h1 {
+    font-size: 1.5rem;
+  }
+  
+  .results-content h2 {
+    font-size: 1.25rem;
+  }
+  
+  .results-content h3 {
+    font-size: 1.1rem;
+  }
+}
+
+.results-content canvas {
+  max-width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16/9;
+}
+
+.results-content .chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Ensure all scripts are properly hidden but executed */
+.results-content script {
+  display: none;
 } 

@@ -13,16 +13,29 @@ app.use(express.static(path.join(__dirname, 'build')));
 
 // API endpoint to handle search queries
 app.post('/api/search', (req, res) => {
-  const { query } = req.body;
+  // Extract query and backend choice from request body
+  const { query, backend = 'functions' } = req.body; // Default to 'functions' if not specified
   
   if (!query) {
     return res.status(400).json({ error: 'Query is required' });
   }
   
-  console.log('Received query:', query);
+  console.log(`Received query: "${query}" for backend: ${backend}`);
+  
+  // Determine which Python script to run based on backend choice
+  const scriptName = backend === 'analysis' ? 'analysis.py' : 'function_call.py';
+  const pythonScriptPath = path.resolve(__dirname, '..', scriptName);
+  
+  console.log(`Executing Python script: ${pythonScriptPath}`);
+  
+  // Check if the selected python script exists
+  if (!fs.existsSync(pythonScriptPath)) {
+    console.error(`Python script not found at: ${pythonScriptPath}`);
+    return res.status(500).json({ error: `Backend script (${scriptName}) not found.` });
+  }
   
   // Spawn a Python process to execute the query
-  const pythonProcess = spawn('python', [path.resolve(__dirname, '..', 'function_call.py')]);
+  const pythonProcess = spawn('python', [pythonScriptPath]);
   
   // Write the query to stdin
   pythonProcess.stdin.write(query);
@@ -34,48 +47,48 @@ app.post('/api/search', (req, res) => {
   // Collect data from stdout
   pythonProcess.stdout.on('data', (data) => {
     responseData += data.toString();
-    console.log('Python output:', data.toString());
+    console.log(`[${scriptName}] output:`, data.toString());
   });
   
   // Collect error data
   pythonProcess.stderr.on('data', (data) => {
     errorData += data.toString();
-    console.error('Python error:', data.toString());
+    console.error(`[${scriptName}] error:`, data.toString());
   });
   
   // Handle process completion
   pythonProcess.on('close', (code) => {
-    console.log(`Python process exited with code ${code}`);
+    console.log(`[${scriptName}] process exited with code ${code}`);
     
     if (code !== 0) {
-      console.error('Error data:', errorData);
-      return res.status(500).json({ error: 'Query processing failed', details: errorData });
+      console.error(`[${scriptName}] Error data:`, errorData);
+      return res.status(500).json({ error: `Query processing failed with ${scriptName}`, details: errorData });
     }
     
     // Check if output.html exists and return its contents if it does
-    const htmlPath = path.resolve(__dirname, 'output.html');
-    console.log('Looking for output.html at:', htmlPath);
+    const htmlPath = path.resolve(__dirname, '..', 'output.html');
+    console.log(`[${scriptName}] Looking for output.html at:`, htmlPath);
     
     if (fs.existsSync(htmlPath)) {
-      console.log('Found output.html - sending HTML content to frontend');
+      console.log(`[${scriptName}] Found output.html - sending HTML content to frontend`);
       try {
         const htmlContent = fs.readFileSync(htmlPath, 'utf8');
-        return res.json({ response: htmlContent });
+        return res.json({ response: htmlContent, backend: backend });
       } catch (err) {
-        console.error('Error reading output.html:', err);
+        console.error(`[${scriptName}] Error reading output.html:`, err);
       }
     } else {
-      console.log('output.html not found at expected path:', htmlPath);
+      console.log(`[${scriptName}] output.html not found at expected path:`, htmlPath);
     }
     
     // Otherwise return the stdout output
     try {
       // Try to parse as JSON first
       const jsonData = JSON.parse(responseData);
-      res.json({ response: jsonData });
+      res.json({ response: jsonData, backend: backend });
     } catch (e) {
       // If not JSON, return as text
-      res.json({ response: responseData });
+      res.json({ response: responseData, backend: backend });
     }
   });
 });

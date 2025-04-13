@@ -4,8 +4,8 @@ import './SearchBar.css';
 const predefinedSearches = [
   { 
     id: 1, 
-    name: 'Biotech startups in Zurich', 
-    query: 'Show me all Biotech startups in Zurich' 
+    name: 'Biotech startups in Zürich', 
+    query: 'Show me all Biotech startups in Zürich' 
   },
   { 
     id: 2, 
@@ -15,7 +15,7 @@ const predefinedSearches = [
   { 
     id: 3, 
     name: 'Top investors in Medtech', 
-    query: 'Who are the top investors in Medtech startups?' 
+    query: 'Who are the top investors in medtech startups?' 
   },
   { 
     id: 4, 
@@ -25,23 +25,24 @@ const predefinedSearches = [
   { 
     id: 5, 
     name: 'Recent deals in Cleantech', 
-    query: 'Show me the most recent funding deals in Cleantech' 
+    query: 'Show me the most recent funding deals in cleantech' 
   }
 ];
 
 function SearchBar({ onSearch }) {
   const [query, setQuery] = useState('');
+  const [backend, setBackend] = useState('functions');
   
   const handleSubmit = (e) => {
     e.preventDefault();
     if (query.trim()) {
-      onSearch(query);
+      onSearch({ query, backend });
     }
   };
   
   const handlePredefinedSearch = (predefinedQuery) => {
     setQuery(predefinedQuery);
-    onSearch(predefinedQuery);
+    onSearch({ query: predefinedQuery, backend });
   };
   
   return (
@@ -63,6 +64,31 @@ function SearchBar({ onSearch }) {
           >
             Search
           </button>
+        </div>
+        
+        {/* Mode Selection */}
+        <div className="backend-selection mb-3">
+          <label className="form-label d-block text-center mb-2">Choose which mode:</label>
+          <div className="d-flex justify-content-center gap-2">
+            <button
+              type="button"
+              className={`btn ${backend === 'functions' ? 'btn-success' : 'btn-outline-secondary'} flex-grow-1`}
+              onClick={() => setBackend('functions')}
+              style={{ minWidth: '150px', height: '60px' }}
+            >
+              Analysis
+            </button>
+            <button
+              type="button"
+              className={`btn ${backend === 'analysis' ? 'btn-success' : 'btn-outline-secondary'} flex-grow-1`}
+              onClick={() => setBackend('analysis')}
+              title="May provide creative but occasionally inaccurate responses"
+              style={{ minWidth: '150px', height: '60px' }}
+            >
+              Advanced Analysis
+              <small className="d-block text-warning">May hallucinate</small>
+            </button>
+          </div>
         </div>
       </form>
       

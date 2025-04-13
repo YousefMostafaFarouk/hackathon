@@ -48,12 +48,13 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearch = async (query) => {
+  const handleSearch = async (searchParams) => {
+    const { query, backend = 'functions' } = searchParams;
     setLoading(true);
     setError(null);
     
     try {
-      console.log('Sending query to server:', query);
+      console.log(`Sending query to server: "${query}" using backend: ${backend}`);
       const response = await fetch(`${API_BASE_URL}/api/search`, {
         method: 'POST',
         mode: 'cors',
@@ -62,7 +63,7 @@ function App() {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, backend }),
       });
       
       console.log('Response status:', response.status);

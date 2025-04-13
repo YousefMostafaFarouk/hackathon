@@ -103,7 +103,7 @@ const server = http.createServer((req, res) => {
           }
           
           // Check if output.html exists
-          const htmlPath = path.resolve(__dirname, '..', 'output.html');
+          const htmlPath = path.resolve(__dirname, 'output.html');
           if (fs.existsSync(htmlPath)) {
             try {
               const htmlContent = fs.readFileSync(htmlPath, 'utf8');

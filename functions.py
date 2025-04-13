@@ -80,7 +80,7 @@ def write_to_html(text: str):
     """
     # Use absolute path to ensure the file is created in the project root
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(script_dir, "output.html")
+    output_path = os.path.join(script_dir, "react-ui/output.html")
     
     print(f"Writing HTML output to: {output_path}")
     try:
@@ -129,7 +129,7 @@ def get_data_by_attribute_function(Code : str,
         Spin_offs (str): Spin-off institution (e.g., "ETH"). Use an empty string ("") to ignore.
         City (str): Company location. Use an empty string ("") to ignore.
         Year (int): Founding year. Use -1 to ignore.
-        CEO_Gender (str): Gender of the CEO ("M", "F", or other). Use an empty string ("") to ignore.
+        CEO_Gender (str): Gender of the CEO ("Male", "Female", or other). Use an empty string ("") to ignore.
         OOB (int): Out-of-business status. 1 = True, 0 = False, -1 = ignore.
         Funded (int): Funding status. 1 = funded, 0 = not funded, -1 = ignore.
         sort_by (str): Column name to sort the results by. Use "Year" to ignore.
@@ -263,7 +263,7 @@ def get_deal_data_by_attribute(id: str,
     if sort_by in df_deal.columns and sort_by != "":
         df_deal[sort_by] = pd.to_numeric(df_deal[sort_by], errors="coerce")
         df_deal = df_deal.dropna(subset=[sort_by]).sort_values(by=sort_by, ascending=False)
-    return df_deal.head(20).fillna('').to_dict(orient="records")
+    return df_deal.head(100).fillna('').to_dict(orient="records")
 
 def early_stage_investment_volume(Industry : str) -> float:
     """
@@ -274,15 +274,36 @@ def early_stage_investment_volume(Industry : str) -> float:
         float: The investment volume
     """
     import numpy as np
-    df_deal = pd.read_excel("Data-startupticker.xlsx", sheet_name="Deals")
+    print(f"Processing early stage investment volume for industry: {Industry}")
+    
+    try:
+        df_deal = pd.read_excel("C:/Users/camca/Desktop/hackathon/Data-startupticker.xlsx", sheet_name="Deals")
+    except FileNotFoundError:
+        print("Error: Could not find Data-startupticker.xlsx file")
+        return 0
+    except Exception as e:
+        print(f"Error loading Excel file: {str(e)}")
+        return 0
+    print(f"Loaded deals dataframe with shape: {df_deal.shape}")
+    
     df_comp = get_company_df()
+    print(f"Loaded company dataframe with shape: {df_comp.shape}")
+    
     df_comp_subset = df_comp[['Title', 'Industry', 'Vertical', 'City']].copy()
     df_deal = df_deal.merge(df_comp_subset, left_on='Company', right_on='Title', how='left')
+    print(f"After merge, deals dataframe shape: {df_deal.shape}")
 
     if Industry != "":
         df_deal = df_deal[df_deal["Industry"] == Industry]
+        print(f"After industry filter, deals dataframe shape: {df_deal.shape}")
+    
     df_deal = df_deal[(df_deal['Phase'] == 'Early Stage') | (df_deal['Phase'] == 'Seed')]
-    return float(np.sum(df_deal['Amount']))
+    print(f"After phase filter, deals dataframe shape: {df_deal.shape}")
+    
+    total_amount = float(np.sum(df_deal['Amount']))
+    print(f"Total investment amount: {total_amount}")
+    
+    return total_amount
 
 #print(get_deal_data_by_attribute(id="", investor="", min_amount=-1, max_amount=-1, confidential=-1, min_valuation=-1, max_valuation=-1, time_start="", time_end="", type="", phase="", canton="BE", company="", ceo_gender="", industry="", City="", sort_by="Valuation")
 #)

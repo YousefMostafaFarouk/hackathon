@@ -277,7 +277,7 @@ def early_stage_investment_volume(Industry : str) -> float:
     print(f"Processing early stage investment volume for industry: {Industry}")
     
     try:
-        df_deal = pd.read_excel("C:/Users/camca/Desktop/hackathon/Data-startupticker.xlsx", sheet_name="Deals")
+        df_deal = pd.read_excel("../Data-startupticker.xlsx", sheet_name="Deals")
     except FileNotFoundError:
         print("Error: Could not find Data-startupticker.xlsx file")
         return 0

@@ -86,7 +86,7 @@ function SearchBar({ onSearch }) {
               style={{ minWidth: '150px', height: '60px' }}
             >
               Advanced Analysis
-              <small className="d-block text-warning">May hallucinate</small>
+              <small className="d-block text-warning">Experimental</small>
             </button>
           </div>
         </div>

@@ -3,27 +3,37 @@ import './ResultsView.css';
 
 function ResultsView({ results }) {
   const contentRef = useRef(null);
-  
-  // Function to determine if the content includes HTML
+
   const isHTML = (str) => {
     return /<[a-z][\s\S]*>/i.test(str);
   };
-  
-  // Function to sanitize HTML content (simple version)
-  const createMarkup = (content) => {
-    return { __html: content };
-  };
 
-  // Effect to make charts responsive after they're inserted into the DOM
   useEffect(() => {
     if (results && isHTML(results.response) && contentRef.current) {
-      // Find all canvases and make them responsive
-      const canvases = contentRef.current.querySelectorAll('canvas');
+      const container = contentRef.current;
+
+      // Inject HTML content
+      container.innerHTML = results.response;
+
+      // Make canvases responsive
+      const canvases = container.querySelectorAll('canvas');
       canvases.forEach(canvas => {
-        // Ensure canvas is responsive
         if (canvas.style) {
           canvas.style.maxWidth = '100%';
           canvas.style.height = 'auto';
+        }
+      });
+
+      // Ensure all tables are scrollable
+      const tables = container.querySelectorAll('table');
+      tables.forEach(table => {
+        if (table.parentElement && !table.parentElement.classList.contains('table-wrapper')) {
+          const wrapper = document.createElement('div');
+          wrapper.classList.add('table-wrapper');
+          wrapper.style.overflowX = 'auto';
+          wrapper.style.width = '100%';
+          table.parentNode.insertBefore(wrapper, table);
+          wrapper.appendChild(table);
         }
       });
 
@@ -34,19 +44,16 @@ function ResultsView({ results }) {
         meta.content = 'width=device-width, initial-scale=1.0';
         document.head.appendChild(meta);
       }
-      
-      // Ensure all tables are scrollable
-      const tables = contentRef.current.querySelectorAll('table');
-      tables.forEach(table => {
-        // Wrap table in a div with overflow auto if not already
-        if (table.parentElement && !table.parentElement.classList.contains('table-wrapper')) {
-          const wrapper = document.createElement('div');
-          wrapper.classList.add('table-wrapper');
-          wrapper.style.overflowX = 'auto';
-          wrapper.style.width = '100%';
-          table.parentNode.insertBefore(wrapper, table);
-          wrapper.appendChild(table);
-        }
+
+      // Execute <script> tags
+      const scripts = container.querySelectorAll('script');
+      scripts.forEach(oldScript => {
+        const newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(attr => {
+          newScript.setAttribute(attr.name, attr.value);
+        });
+        newScript.text = oldScript.text;
+        oldScript.replaceWith(newScript);
       });
     }
   }, [results]);
@@ -54,17 +61,17 @@ function ResultsView({ results }) {
   return (
     <div className="results-container">
       <h3 className="results-title">Results</h3>
-      
+
       <div className="results-content">
         {results && isHTML(results.response) ? (
-          <div ref={contentRef} className="html-content-wrapper" dangerouslySetInnerHTML={createMarkup(results.response)} />
+          <div ref={contentRef} className="html-content-wrapper" />
         ) : (
           <div className="text-container">
             <p>{results?.response || 'No results found.'}</p>
           </div>
         )}
       </div>
-      
+
       {results?.data && Array.isArray(results.data) && results.data.length > 0 && (
         <div className="data-table-container">
           <h4>Data Results</h4>
@@ -94,4 +101,4 @@ function ResultsView({ results }) {
   );
 }
 
-export default ResultsView; 
+export default ResultsView;

@@ -66,7 +66,7 @@ app.post('/api/search', (req, res) => {
     }
     
     // Check if output.html exists and return its contents if it does
-    const htmlPath = path.resolve(__dirname, '..', 'output.html');
+    const htmlPath = path.resolve(__dirname, 'output.html');
     console.log(`[${scriptName}] Looking for output.html at:`, htmlPath);
     
     if (fs.existsSync(htmlPath)) {
